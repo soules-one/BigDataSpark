@@ -1,0 +1,29 @@
+FROM apache/spark:3.5.0
+
+USER root
+RUN apt-get update && apt-get install -y netcat-openbsd maven && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/spark/extra-jars && \
+    mvn dependency:get \
+        -Dartifact=org.postgresql:postgresql:42.7.3 \
+        -Ddest=/opt/spark/extra-jars/postgresql-42.7.3.jar -q && \
+    mvn dependency:get \
+        -Dartifact=com.clickhouse.spark:clickhouse-spark-runtime-3.5_2.12:0.10.0 \
+        -Ddest=/opt/spark/extra-jars/clickhouse-spark-runtime-3.5_2.12-0.10.0.jar -q && \
+    mvn dependency:get \
+        -Dartifact=org.mongodb.spark:mongo-spark-connector_2.12:10.4.0 \
+        -Ddest=/opt/spark/extra-jars/mongo-spark-connector_2.12-10.4.0.jar -q && \
+    mvn dependency:get \
+        -Dartifact=org.mongodb:mongodb-driver-sync:5.1.0 \
+        -Ddest=/opt/spark/extra-jars/mongodb-driver-sync-5.1.0.jar -q && \
+    mvn dependency:get \
+        -Dartifact=org.mongodb:bson:5.1.0 \
+        -Ddest=/opt/spark/extra-jars/bson-5.1.0.jar -q && \
+    mvn dependency:get \
+        -Dartifact=org.mongodb:mongodb-driver-core:5.1.0 \
+        -Ddest=/opt/spark/extra-jars/mongodb-driver-core-5.1.0.jar -q
+
+USER spark
+WORKDIR /opt/spark/work-dir
+ENTRYPOINT ["/bin/bash", "/opt/spark/work-dir/scripts/entrypoint.sh"]
